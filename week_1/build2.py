@@ -10,6 +10,7 @@ client = OpenAI(
 )
 
 def run_chatbot():
+    prev_response=None
     """
     A terminal chatbot that holds a coherent multi-turn conversation.
 
@@ -25,19 +26,32 @@ def run_chatbot():
     - Add a '/tokens' command that prints response.usage after the last call.
     """
     messages = [
-        {"role": "system", "content": "You are a helpful assistant."}
+        {"role": "system", "content": "You are a helpful assistant who gives short answers."}
     ]
 
     print("Chat started. Type 'exit' to quit.\n")
 
     while True:
-        # TODO: take user input
-        # TODO: append the user turn to messages
-        # TODO: call the API with the full messages list
-        # TODO: extract the assistant's reply
-        # TODO: append the assistant turn to messages
-        # TODO: print the reply
-        pass
+       prompt=input() # TODO: take user input
+       if prompt=='exit':
+           print('exiting chat. see you later!')
+           print('Total tokens used in this chat: ', prev_response.usage.total_tokens)
+           break
+
+       messages.append({"role": "system", "content": prompt}) # TODO: append the user turn to messages
+
+       response = client.chat.completions.create(
+        model="openrouter/free",
+        messages=messages)   # TODO: call the API with the full messages list
+       prev_response=response      
+       reply=response.choices[0].message.content    # TODO: extract the assistant's reply
+      
+       messages.append({"role": "system","content": reply})   # TODO: append the assistant turn to messages
+
+       print(reply) 
+       print('The model which answered this prompt was', response.model) # TODO: print the reply
+       
+        
 
 if __name__ == "__main__":
     run_chatbot()
