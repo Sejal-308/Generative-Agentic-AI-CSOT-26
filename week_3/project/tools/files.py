@@ -10,3 +10,10 @@ Implement:
 """
 
 # TODO: implement — see Build 2
+from week_3.builds.build2_agent_class import (
+    resolve_path,
+    read_file,
+    write_file,
+    edit_file,
+    list_files
+)

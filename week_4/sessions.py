@@ -1,18 +1,3 @@
-"""
-Build 1: Session Store
-========================
-Save and resume conversations on disk. Load AGENTS.md into the system prompt.
-
-Tasks:
-  1. create_session() -> session_id
-  2. save_session(session_id, messages, title?)
-  3. load_session(session_id) -> {id, title, messages, ...}
-  4. list_sessions() -> [{id, title, updated_at}, ...]
-  5. build_system_prompt() -> base + AGENTS.md contents
-
-Run twice: save a session in run 1, load it in run 2 and confirm messages restored.
-"""
-
 import json
 import os
 import uuid
