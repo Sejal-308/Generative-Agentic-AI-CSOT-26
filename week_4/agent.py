@@ -4,28 +4,24 @@ import json
 from openai import OpenAI
 from dotenv import load_dotenv
 
-# Import Session & Memory utilities (carried over from Week 3)
+
 from sessions import create_session, load_session, save_session, build_system_prompt
 
-# Import Week 4 Tools
+
 from tools.exec import run_command
 from tools.files import read_file, write_file, edit_file, list_files
 from tools.plan import add_todos, get_todos, mark_todo
 from tools.search import grep, list_definitions as search_list_files
 
-# Load environment variables securely
 load_dotenv()
 
-# Assuming your TOOLS array schema is centrally defined in a schemas file or aggregated here.
+
 from tools.exec import TOOLS as etools
 from tools.files import TOOLS as ftools
 from tools.plan import TOOLS as ptools
 from tools.search import TOOLS as setools
 
-TOOLS=etools+ftools+ptools+setools
-
-
-
+TOOLS = etools + ftools + ptools + setools
 
 TOOL_REGISTRY = {
     "run_command": run_command,
@@ -56,8 +52,20 @@ class Agent:
         if session_data and "messages" in session_data:
             self.messages = session_data["messages"]
         else:
-            # Inject AGENTS.md procedural memory at startup
+            # Generate the default baseline system prompt
             system_prompt = build_system_prompt()
+            
+            agents_md_path = os.path.join(self.workspace, "AGENTS.md")
+            if os.path.exists(agents_md_path):
+                try:
+                    with open(agents_md_path, "r", encoding="utf-8") as f:
+                        agents_content = f.read()
+                    # Append standing instructions explicitly to the system prompt
+                    system_prompt += f"\n\n### Project-Specific Instructions (AGENTS.md):\n{agents_content}"
+                except Exception as e:
+                    sys.stderr.write(f"[Warning] Failed to read AGENTS.md: {e}\n")
+            # --- END WEEK 4 AGENTS.md LOADING LOGIC ---
+
             self.messages = [{"role": "system", "content": system_prompt}]
 
     def dispatch(self, tool_call) -> str:
@@ -108,16 +116,26 @@ class Agent:
                     })
             
             elif finish_reason == "stop":
-                # NEW WEEK 4 TASK VERIFICATION BOUNDARY
-                # Do not let the agent declare victory if tasks remain incomplete.
+                
                 todos = get_todos()
-                unverified_tasks = [task for task in todos if task.get("status") != "verified"]
+                unverified_tasks = []
+                for task in todos:
+                    # Safe extraction checking if task is a dictionary or raw string
+                    if isinstance(task, dict):
+                        status = task.get("status", "pending")
+                        description = task.get("description", task.get("name", "Unknown Task"))
+                    else:
+                        status = "pending"
+                        description = str(task)
+                    
+                    # Track unverified items properly so the verification block activates
+                    if status != "verified":
+                        unverified_tasks.append(description)
                 
                 reply = message.content or ""
                 self.messages.append({"role": "assistant", "content": reply})
                 
                 if unverified_tasks:
-                    # Force the model to continue looping until the plan is genuinely verified
                     warning_msg = (
                         "Wait, your task list is not complete. The following tasks are not verified: "
                         f"{json.dumps(unverified_tasks)}. You must run tests to verify your fix and use mark_todo before finishing."
@@ -142,18 +160,16 @@ class Agent:
 
 
 class REPLAgent(Agent):
-    """The Terminal Body: Adds human-facing text rendering over the base Agent."""
     
     def _emit(self, event: str, **data) -> None:
-        """Intercepts internal hooks to print updates to the terminal."""
+        
         if event == "tool_start":
-            # Print tool executions securely to standard error
             sys.stderr.write(f"\n[Agent] Executing tool: {data['name']}...\n")
         elif event == "verification_warning":
             sys.stderr.write(f"\n[System Loop] Agent attempted to exit early. Forcing verification...\n")
 
     def run(self) -> None:
-        """Drives the perpetual interactive terminal chat loop."""
+       
         print(f"Code Scout Online. Session ID: {self.session_id}")
         print("Type '/quit' to exit.")
         
@@ -172,13 +188,10 @@ class REPLAgent(Agent):
 
 
 if __name__ == "__main__":
-    # Checks sys.argv to automatically determine execution mode
     if len(sys.argv) > 1:
-        # Run Once Mode: python agent.py "why is test_auth.py failing — fix it"
         prompt = " ".join(sys.argv[1:])
         agent = REPLAgent()
         print(agent.run_once(prompt))
     else:
-        # Interactive Terminal Mode: python agent.py
         agent = REPLAgent()
         agent.run()

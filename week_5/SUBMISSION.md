@@ -1,0 +1,7 @@
+I created a skills folder inside which there is a markdown file which contains plain english instructions for these tasks: checking the files which have been modifed and the exact modifications made; debugging, drafting a commit message and asking for user approval before making any concrete changes. 
+
+Then I plugged in the Github MCP Server and generated a personal access token. I modifed my agent to accomodate these two additional features, mainly i now use asyncio to make sure overlapping processes do not crash my system. 
+
+The most recurring problem while coding for physics is that despite best efforts, most of the times the operation and installation instructions on repos like AMRVAC aren't very well updated or tailor made for different systems like Windows/Mac/Linux or for different users like beginner, or a full time researcher. Now, I can easily clone any repo I like and using this coding agent I can customize my workflow and instructions according to my setup and the level of complexity I'm targeting. 
+
+This makes it much smoother to overcome hurdles because now I don't have to search for the right documentation or repeatedly take screenshots and ask an AI Agent separately. The agent works by my side like a tool. 

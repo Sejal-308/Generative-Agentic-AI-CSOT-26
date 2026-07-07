@@ -69,7 +69,7 @@ def run_command(command: str, cwd: str = WORKSPACE_ROOT, timeout: int = TIMEOUT_
         stdout_raw = result.stdout or ""
         stderr_raw = result.stderr or ""
         exit_code = result.returncode
-    except subprocess.TimeoutExpired as e:
+    except subprocess.TimeoutExpired:
         return {
             "stdout": "",
             "stderr": f"Command timed out after {timeout} seconds.",
